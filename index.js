@@ -22,7 +22,301 @@ const clientCertUrl = process.env.GOOGLE_CLIENT_X509_CERT_URL;
 const universeDomain = process.env.GOOGLE_UNIVERSE_DOMAIN;
 
 app.get('/', (req, res) => {
-  res.send('Hello World 3!');
+  res.send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>API Documentation</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            background-color: #f4f4f4;
+          }
+          h1, h2, h3 {
+            color: #333;
+          }
+          code {
+            background-color: #eee;
+            padding: 2px 5px;
+            border-radius: 3px;
+          }
+          pre {
+            background-color: #eee;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+          }
+          .endpoint {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+          }
+          .endpoint h3 {
+            margin-top: 0;
+          }
+          .response, .error {
+            margin-top: 10px;
+          }
+          .response pre, .error pre {
+            margin: 0;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>API Documentation</h1>
+        <p>This is the documentation for the SmartSpot API. Below are the available endpoints, their expected inputs, and responses.</p>
+  
+        <div class="endpoint">
+          <h2>1. Register a Venue</h2>
+          <p><strong>Endpoint:</strong> <code>POST /register-venue/:name/:totalspots/:smartspots/:venueid</code></p>
+          <p><strong>Description:</strong> Registers a new venue with the provided details.</p>
+          <p><strong>Parameters:</strong></p>
+          <ul>
+            <li><code>name</code>: Name of the venue (string).</li>
+            <li><code>totalspots</code>: Total number of parking spots (positive integer).</li>
+            <li><code>smartspots</code>: Number of smart parking spots (non-negative integer, ≤ totalspots).</li>
+            <li><code>venueid</code>: Unique ID for the venue (string).</li>
+          </ul>
+          <p><strong>Response:</strong></p>
+          <div class="response">
+            <p><strong>Status Code:</strong> <code>201 Created</code></p>
+            <pre>
+  {
+    "message": "Venue registered successfully.",
+    "venue": {
+      "name": "Venue Name",
+      "venueid": "venue123",
+      "totalspots": 50,
+      "smartspots": 20
+    },
+    "slots": [
+      {
+        "slotid": 1,
+        "status": false,
+        "carnumber": null
+      },
+      ...
+    ]
+  }
+            </pre>
+          </div>
+          <p><strong>Error Responses:</strong></p>
+          <div class="error">
+            <p><strong>Status Code:</strong> <code>400 Bad Request</code></p>
+            <pre>
+  {
+    "error": "Missing required parameters."
+  }
+            </pre>
+            <p><strong>Status Code:</strong> <code>400 Bad Request</code></p>
+            <pre>
+  {
+    "error": "Invalid totalspots value. It must be a positive integer."
+  }
+            </pre>
+            <p><strong>Status Code:</strong> <code>400 Bad Request</code></p>
+            <pre>
+  {
+    "error": "Invalid smartspots value. It must be a non-negative integer and less than or equal to totalspots."
+  }
+            </pre>
+            <p><strong>Status Code:</strong> <code>409 Conflict</code></p>
+            <pre>
+  {
+    "error": "Venue with this ID already exists. Please use a different ID."
+  }
+            </pre>
+            <p><strong>Status Code:</strong> <code>500 Internal Server Error</code></p>
+            <pre>
+  {
+    "error": "An unexpected error occurred while registering the venue.",
+    "details": "Error message details"
+  }
+            </pre>
+          </div>
+        </div>
+  
+        <div class="endpoint">
+          <h2>2. Fetch Slots for a Venue</h2>
+          <p><strong>Endpoint:</strong> <code>GET /fetchslots/venueid=:venueid</code></p>
+          <p><strong>Description:</strong> Fetches the parking slots for a specific venue.</p>
+          <p><strong>Parameters:</strong></p>
+          <ul>
+            <li><code>venueid</code>: Unique ID of the venue (string).</li>
+          </ul>
+          <p><strong>Response:</strong></p>
+          <div class="response">
+            <p><strong>Status Code:</strong> <code>200 OK</code></p>
+            <pre>
+  {
+    "message": "Venue slots fetched successfully.",
+    "venue": {
+      "name": "Venue Name",
+      "venueid": "venue123",
+      "totalspots": 50,
+      "smartspots": 20,
+      "slots": [
+        {
+          "slotid": 1,
+          "status": false,
+          "carnumber": null
+        },
+        ...
+      ]
+    }
+  }
+            </pre>
+          </div>
+          <p><strong>Error Responses:</strong></p>
+          <div class="error">
+            <p><strong>Status Code:</strong> <code>400 Bad Request</code></p>
+            <pre>
+  {
+    "error": "Venue ID is required."
+  }
+            </pre>
+            <p><strong>Status Code:</strong> <code>404 Not Found</code></p>
+            <pre>
+  {
+    "error": "Venue not found. Please check the venue ID."
+  }
+            </pre>
+            <p><strong>Status Code:</strong> <code>500 Internal Server Error</code></p>
+            <pre>
+  {
+    "error": "An unexpected error occurred while fetching venue slots.",
+    "details": "Error message details"
+  }
+            </pre>
+          </div>
+        </div>
+  
+        <div class="endpoint">
+          <h2>3. Update Slot Status</h2>
+          <p><strong>Endpoint:</strong> <code>POST /updateslot/venueid=:venueid/slotid=:slotid</code></p>
+          <p><strong>Description:</strong> Updates the status of a specific parking slot (toggles between occupied and available).</p>
+          <p><strong>Parameters:</strong></p>
+          <ul>
+            <li><code>venueid</code>: Unique ID of the venue (string).</li>
+            <li><code>slotid</code>: ID of the slot to update (integer).</li>
+          </ul>
+          <p><strong>Response:</strong></p>
+          <div class="response">
+            <p><strong>Status Code:</strong> <code>200 OK</code></p>
+            <pre>
+  {
+    "message": "Slot status updated successfully.",
+    "slot": {
+      "slotid": 1,
+      "status": true,
+      "carnumber": null
+    }
+  }
+            </pre>
+          </div>
+          <p><strong>Error Responses:</strong></p>
+          <div class="error">
+            <p><strong>Status Code:</strong> <code>400 Bad Request</code></p>
+            <pre>
+  {
+    "error": "Venue ID and Slot ID are required."
+  }
+            </pre>
+            <p><strong>Status Code:</strong> <code>400 Bad Request</code></p>
+            <pre>
+  {
+    "error": "Invalid Slot ID. It must be a number."
+  }
+            </pre>
+            <p><strong>Status Code:</strong> <code>404 Not Found</code></p>
+            <pre>
+  {
+    "error": "Venue not found. Please check the Venue ID."
+  }
+            </pre>
+            <p><strong>Status Code:</strong> <code>404 Not Found</code></p>
+            <pre>
+  {
+    "error": "Slot not found. Please check the Slot ID."
+  }
+            </pre>
+            <p><strong>Status Code:</strong> <code>500 Internal Server Error</code></p>
+            <pre>
+  {
+    "error": "An unexpected error occurred while updating the slot status.",
+    "details": "Error message details"
+  }
+            </pre>
+          </div>
+        </div>
+  
+        <div class="endpoint">
+          <h2>4. Block a Slot</h2>
+          <p><strong>Endpoint:</strong> <code>GET /blockslot/venueid=:venueid/slotid=:slotid</code></p>
+          <p><strong>Description:</strong> Blocks or unblocks a specific parking slot (toggles status).</p>
+          <p><strong>Parameters:</strong></p>
+          <ul>
+            <li><code>venueid</code>: Unique ID of the venue (string).</li>
+            <li><code>slotid</code>: ID of the slot to block/unblock (integer).</li>
+          </ul>
+          <p><strong>Response:</strong></p>
+          <div class="response">
+            <p><strong>Status Code:</strong> <code>200 OK</code></p>
+            <pre>
+  {
+    "message": "Slot status updated successfully.",
+    "slot": {
+      "slotid": 1,
+      "status": true,
+      "carnumber": null
+    }
+  }
+            </pre>
+          </div>
+          <p><strong>Error Responses:</strong></p>
+          <div class="error">
+            <p><strong>Status Code:</strong> <code>400 Bad Request</code></p>
+            <pre>
+  {
+    "error": "Venue ID and Slot ID are required."
+  }
+            </pre>
+            <p><strong>Status Code:</strong> <code>400 Bad Request</code></p>
+            <pre>
+  {
+    "error": "Invalid Slot ID. It must be a number."
+  }
+            </pre>
+            <p><strong>Status Code:</strong> <code>404 Not Found</code></p>
+            <pre>
+  {
+    "error": "Venue not found. Please check the Venue ID."
+  }
+            </pre>
+            <p><strong>Status Code:</strong> <code>404 Not Found</code></p>
+            <pre>
+  {
+    "error": "Slot not found. Please check the Slot ID."
+  }
+            </pre>
+            <p><strong>Status Code:</strong> <code>500 Internal Server Error</code></p>
+            <pre>
+  {
+    "error": "An unexpected error occurred while updating the slot status.",
+    "details": "Error message details"
+  }
+            </pre>
+          </div>
+        </div>
+      </body>
+      </html>
+    `);
 });
 
 app.post(
